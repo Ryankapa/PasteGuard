@@ -118,6 +118,7 @@ If Jev can't be reached (no internet, wrong key), your copied text is **put back
 - **Never sent:** anything else you copy, images, files, or clipboard data from password managers.
 - **Your API key** is stored encrypted with Windows DPAPI in `%APPDATA%\PasteGuard\config.json`. Only your Windows account can decrypt it.
 - **Log:** `%LOCALAPPDATA%\PasteGuard\events.log` records blocked commands (first 300 characters) and scores. It stays on your PC. View it from the tray menu → **Threat activity…** or **Settings → Threat activity**.
+- **Update checks:** only when you click **Check for updates…**. PasteGuard then asks `api.github.com` for the latest release and downloads it from this repository's releases. Nothing else is sent.
 
 ## Tray menu
 
@@ -127,7 +128,21 @@ Right-click the shield:
 - **Settings…**: key, threshold, options (double-clicking the icon also opens it)
 - **Threat activity…**: every blocked and released command, with time and score (double-click a row for the full command)
 - **Start with Windows**
+- **Check for updates…**: see below
+- **About PasteGuard**: shows your version and opens this page
 - **Exit**
+
+## Updating
+
+Right-click the shield and choose **Check for updates…** (it's also in **Settings → Updates**).
+
+1. PasteGuard asks GitHub whether a newer version exists and shows what's new.
+2. Click **Download and install**. The new `PasteGuard.exe` is downloaded and checked against the release's SHA-256 hash and version. If either doesn't match, it's deleted and nothing changes.
+3. PasteGuard swaps in the new file and restarts on its own. Your key, settings, allowed commands and history are kept.
+
+PasteGuard never checks or updates by itself. If the folder it runs from can't be written to, it tells you where the new version was saved so you can replace the file yourself.
+
+Version 1.0.0 doesn't have this button yet, so update from 1.0.0 by downloading the new version from **[Releases](https://github.com/Ryankapa/PasteGuard/releases/latest)** once.
 
 ## Uninstall
 
