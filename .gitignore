@@ -20,3 +20,6 @@ config.json
 
 # Local calibration output (scores from your own API runs)
 corpus/calibration-results.md
+
+# Local demo material for recording videos (never publish the fake lure page)
+demo/
