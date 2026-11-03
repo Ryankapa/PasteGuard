@@ -1,0 +1,22 @@
+# Build output
+bin/
+obj/
+publish/
+TestResults/
+*.user
+.vs/
+.vscode/
+.idea/
+
+# Never commit secrets or local data
+.env
+.env.*
+config.json
+*.log
+*.log.old
+*.pfx
+*.p12
+*.key
+
+# Local calibration output (scores from your own API runs)
+corpus/calibration-results.md

