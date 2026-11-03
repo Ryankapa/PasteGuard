@@ -17,17 +17,31 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Check tag matches version and changelog
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $props = Get-Content Directory.Build.props -Raw
+          if ($props -notmatch '<Version>(\d+\.\d+\.\d+)</Version>') { throw "No version in Directory.Build.props" }
+          $version = $Matches[1]
+          if ($tag -ne "v$version") { throw "Tag $tag doesn't match Directory.Build.props version $version. Use release.ps1." }
+          $changelog = Get-Content CHANGELOG.md -Raw
+          $m = [regex]::Match($changelog, "(?ms)^## \[$([regex]::Escape($version))\][^\r\n]*\r?\n(.*?)(?=^## \[|\z)")
+          if (-not $m.Success -or -not $m.Groups[1].Value.Trim()) { throw "CHANGELOG.md has no notes for $version" }
+          $m.Groups[1].Value.Trim() | Out-File release-notes.md -Encoding utf8
+
       - name: Test
         run: dotnet test -c Release
 
       - name: Build exe
         shell: pwsh
-        run: ./build.ps1 -Version ("${{ github.ref_name }}".TrimStart("v"))
+        run: ./build.ps1
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
+          name: PasteGuard ${{ github.ref_name }}
+          body_path: release-notes.md
           files: |
             publish/PasteGuard.exe
             publish/PasteGuard.exe.sha256
-          generate_release_notes: true
