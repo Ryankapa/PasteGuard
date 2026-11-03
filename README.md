@@ -10,6 +10,12 @@ PasteGuard watches your clipboard. When you copy something that looks like a com
 - Never runs anything it inspects. It only reads text.
 - No installer, no admin rights, no .NET install needed. It's one `.exe`.
 
+## See it in action
+
+[![PasteGuard demo: a fake "I'm not a robot" page copies a command, PasteGuard blocks it, and Win+R pastes nothing](docs/demo.gif)](docs/demo.mp4)
+
+A fake "I'm not a robot" page copies a command to the clipboard. PasteGuard checks it with Jev, blocks it, and pasting into **Win+R** gives nothing. Normal commands still paste, and every block is listed in **Threat activity**. Recorded in Windows Sandbox; the demo command is harmless and was never run. [Watch the MP4](docs/demo.mp4).
+
 ---
 
 ## Setup (about 3 minutes)
