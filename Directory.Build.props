@@ -4,6 +4,6 @@
     run .\release.ps1 (see docs/RELEASING.md), which also updates CHANGELOG.md and tags the release.
   -->
   <PropertyGroup>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 </Project>
