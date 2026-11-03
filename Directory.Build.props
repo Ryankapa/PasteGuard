@@ -1,0 +1,9 @@
+<Project>
+  <!--
+    The one place the PasteGuard version lives. Don't edit it by hand:
+    run .\release.ps1 (see docs/RELEASING.md), which also updates CHANGELOG.md and tags the release.
+  -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+</Project>

@@ -42,7 +42,7 @@ public sealed class JevClient : IDisposable
         _http = handler is null ? new HttpClient() : new HttpClient(handler);
         _http.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
         _http.Timeout = Timeout.InfiniteTimeSpan; // per-request timeout below
-        _http.DefaultRequestHeaders.UserAgent.ParseAdd("PasteGuard/1.0 (+https://github.com/Ryankapa/PasteGuard)");
+        _http.DefaultRequestHeaders.UserAgent.ParseAdd(AppInfo.UserAgent);
     }
 
     /// <summary>Returns a 0–100 score: how likely Jev thinks the text is a ClickFix attack.</summary>
