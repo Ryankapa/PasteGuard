@@ -7,6 +7,9 @@ The newest version's notes are shown in the app when someone checks for updates.
 
 ## [Unreleased]
 
+### Added
+- **Check for updates…** in the tray menu and in Settings. PasteGuard asks GitHub for the latest release, shows what's new, then downloads it, checks its SHA-256 hash and restarts on the new version. Nothing is checked unless you click it.
+
 ## [1.0.0] - 2026-11-03
 
 ### Added

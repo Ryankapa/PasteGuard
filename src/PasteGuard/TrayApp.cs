@@ -20,7 +20,8 @@ internal sealed class TrayApp : ApplicationContext
     private ReviewForm? _reviewForm;
     private bool _balloonOpensReview;
 
-    public TrayApp()
+    /// <param name="updatedFrom">The previous version, when this start follows an update.</param>
+    public TrayApp(string? updatedFrom = null)
     {
         _settings = Settings.Load();
         var firstRun = !Settings.Exists();
@@ -45,6 +46,9 @@ internal sealed class TrayApp : ApplicationContext
         menu.Items.Add(new ToolStripMenuItem("Threat activity…", null, (_, _) => ActivityForm.ShowSingle(_icons[AgentState.Protecting])));
         menu.Items.Add(_startupItem);
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(new ToolStripMenuItem("Check for updates…", null, (_, _) => ShowUpdates()));
+        menu.Items.Add(new ToolStripMenuItem($"About PasteGuard {AppInfo.VersionText}", null, (_, _) => OpenUrl(AppInfo.RepoUrl)));
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Exit", null, (_, _) => ExitThread()));
 
         _tray = new NotifyIcon { ContextMenuStrip = menu, Visible = true };
@@ -65,9 +69,26 @@ internal sealed class TrayApp : ApplicationContext
         Startup.Refresh(_settings.StartWithWindows);
         RefreshUi();
 
-        Log.Write("START", $"version={Application.ProductVersion} threshold={_settings.Threshold} enabled={_settings.Enabled}");
+        Log.Write("START", $"version={AppInfo.VersionText} threshold={_settings.Threshold} enabled={_settings.Enabled}");
+        _ = UpdateInstaller.CleanupAsync(UpdateInstaller.CurrentExe, justUpdated: updatedFrom is not null);
+
+        if (updatedFrom is not null)
+        {
+            Log.Write("UPDATE", $"Now running {AppInfo.VersionText} (updated from {updatedFrom})");
+            _balloonOpensReview = false;
+            _tray.ShowBalloonTip(5000, "PasteGuard updated",
+                $"You're now on version {AppInfo.VersionText}. Protection is back on.", ToolTipIcon.Info);
+        }
 
         if (!_settings.HasApiKey) ShowSettings();
+    }
+
+    private void ShowUpdates() => UpdateForm.ShowSingle(_icons[AgentState.Protecting], ExitThread);
+
+    private static void OpenUrl(string url)
+    {
+        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch { /* no default browser */ }
     }
 
     private AgentState CurrentState =>
@@ -130,6 +151,7 @@ internal sealed class TrayApp : ApplicationContext
             SaveAndRefresh();
             Log.Write("SETTINGS", $"threshold={_settings.Threshold} onApiError={_settings.OnApiError} startWithWindows={_settings.StartWithWindows}");
         };
+        _settingsForm.CheckForUpdatesRequested += ShowUpdates;
         _settingsForm.KeySaved += () =>
         {
             _apiState = AgentState.Protecting;

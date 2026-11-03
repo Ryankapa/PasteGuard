@@ -28,6 +28,9 @@ internal sealed class SettingsForm : Form
     /// <summary>Raised when a key passes "Test key"; the key is stored right away.</summary>
     public event Action? KeySaved;
 
+    /// <summary>Raised by the "Check for updates…" button.</summary>
+    public event Action? CheckForUpdatesRequested;
+
     private readonly FlowLayoutPanel _root;
     private bool _saving;
 
@@ -123,6 +126,13 @@ internal sealed class SettingsForm : Form
         var viewActivity = new Button { Text = "View activity…", AutoSize = true };
         viewActivity.Click += (_, _) => ActivityForm.ShowSingle(Icon);
         root.Controls.Add(Row(activityLabel, viewActivity));
+
+        // 5. Updates
+        root.Controls.Add(Heading("5. Updates"));
+        var versionLabel = new Label { Text = $"You have PasteGuard {AppInfo.VersionText}.", AutoSize = true, Margin = new Padding(0, 8, 6, 0) };
+        var checkUpdates = new Button { Text = "Check for updates…", AutoSize = true };
+        checkUpdates.Click += (_, _) => CheckForUpdatesRequested?.Invoke();
+        root.Controls.Add(Row(versionLabel, checkUpdates));
 
         // Try it
         root.Controls.Add(Heading("Try it"));
