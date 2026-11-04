@@ -1,4 +1,9 @@
-# PasteGuard
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png">
+    <img src="docs/logo-light.png" alt="PasteGuard" width="420">
+  </picture>
+</p>
 
 A small, free Windows tray agent that stops **ClickFix** attacks: fake CAPTCHA, "verify you are human" or "fix this error" pages that trick you into pasting a malicious command into **Win+R**, a terminal or PowerShell.
 
