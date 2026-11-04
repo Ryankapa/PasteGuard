@@ -8,8 +8,8 @@ The newest version's notes are shown in the app when someone checks for updates.
 ## [Unreleased]
 
 ### Fixed
-- **Check for updates** could fail with "The new version couldn't be started", and afterwards **About** and **Open raw log** crashed until PasteGuard was restarted. The updater no longer replaces PasteGuard's file while it's running: PasteGuard closes first, and a short-lived copy of it swaps in the new version and starts it.
-- If you're on 1.1.0 or 1.2.0, download this version from GitHub once by hand. Updates work from the app after that.
+- **Updating from the app works now.** Before, it failed with "The new version couldn't be started", and **About** and **Open raw log** then crashed until you restarted PasteGuard. The cause: PasteGuard replaced its own file while it was still running. Now it closes first and the new version is put in place after.
+- **On 1.1.0 or 1.2.0?** Download this version from GitHub once by hand, because the old updater is the broken part. After that, updates work from the app.
 
 ## [1.2.0] - 2026-11-05
 
