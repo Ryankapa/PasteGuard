@@ -246,6 +246,89 @@ public class UpdaterTests
         Assert.Equal("new version", File.ReadAllText(current));
     }
 
+    private static (string current, string downloaded) InstallFiles()
+    {
+        var dir = TempDir();
+        var current = Path.Combine(dir, "PasteGuard.exe");
+        var downloaded = Path.Combine(dir, "updates-PasteGuard-9.9.9.exe");
+        File.WriteAllText(current, "old version");
+        File.WriteAllText(downloaded, "new version");
+        return (current, downloaded);
+    }
+
+    [Fact]
+    public void Install_replaces_the_old_exe_and_starts_it_as_updated()
+    {
+        var (current, downloaded) = InstallFiles();
+        var started = new List<(string, string?)>();
+
+        var error = UpdateInstaller.Install(downloaded, current, "1.1.0", (exe, from) => started.Add((exe, from)), delay: TimeSpan.Zero);
+
+        Assert.Null(error);
+        Assert.Equal("new version", File.ReadAllText(current));
+        Assert.Equal(new[] { (current, (string?)"1.1.0") }, started);
+    }
+
+    [Fact]
+    public void Install_waits_for_the_old_exe_to_be_released()
+    {
+        var (current, downloaded) = InstallFiles();
+        var started = 0;
+
+        // The old version still has its exe open (no delete sharing) for the first attempts.
+        var locked = new FileStream(current, FileMode.Open, FileAccess.Read, FileShare.Read);
+        string? error;
+        using (var timer = new System.Threading.Timer(_ => locked.Dispose(), null, 150, Timeout.Infinite))
+            error = UpdateInstaller.Install(downloaded, current, "1.1.0", (_, _) => started++,
+                attempts: 50, delay: TimeSpan.FromMilliseconds(20));
+
+        Assert.Null(error);
+        Assert.Equal(1, started);
+        Assert.Equal("new version", File.ReadAllText(current));
+    }
+
+    [Fact]
+    public void Install_puts_the_old_version_back_when_the_new_one_wont_start()
+    {
+        var (current, downloaded) = InstallFiles();
+        var started = new List<(string, string?)>();
+
+        var error = UpdateInstaller.Install(downloaded, current, "1.1.0", (exe, from) =>
+        {
+            started.Add((exe, from));
+            if (from is not null) throw new System.ComponentModel.Win32Exception(5);
+        }, delay: TimeSpan.Zero);
+
+        Assert.NotNull(error);
+        Assert.Contains("(error 5)", error);
+        Assert.Equal("old version", File.ReadAllText(current));
+        Assert.False(File.Exists(current + ".old"));
+        // Tried the new version, then restarted the old one so protection stays on.
+        Assert.Equal(new[] { (current, (string?)"1.1.0"), (current, (string?)null) }, started);
+    }
+
+    [Fact]
+    public void Install_refuses_a_target_that_isnt_an_exe()
+    {
+        var (_, downloaded) = InstallFiles();
+        var started = 0;
+        var error = UpdateInstaller.Install(downloaded, Path.Combine(TempDir(), "notes.txt"), "1.1.0", (_, _) => started++);
+        Assert.NotNull(error);
+        Assert.Equal(0, started);
+    }
+
+    [Fact]
+    public void Install_refuses_a_missing_download_and_leaves_the_current_exe()
+    {
+        var (current, _) = InstallFiles();
+        var before = File.ReadAllText(current);
+        var started = 0;
+        var error = UpdateInstaller.Install(Path.Combine(TempDir(), "gone.exe"), current, "1.1.0", (_, _) => started++);
+        Assert.NotNull(error);
+        Assert.Equal(0, started);
+        Assert.Equal(before, File.ReadAllText(current));
+    }
+
     [Fact]
     public async Task Cleanup_removes_leftovers()
     {

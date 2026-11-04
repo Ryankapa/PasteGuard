@@ -216,10 +216,23 @@ public sealed class UpdateChecker : IDisposable
     public void Dispose() => _http.Dispose();
 }
 
-/// <summary>Swaps the running exe for a downloaded one, restarts, and tidies up afterwards.</summary>
+/// <summary>
+/// Installs a downloaded version, restarts, and tidies up afterwards.
+///
+/// The running exe is never replaced while it runs: PasteGuard is a single-file app, and .NET reads parts of
+/// the app from its exe file on demand. Swapping that file under a running copy makes those reads fail
+/// (FileNotFoundException), which breaks starting the new version and anything else that opens a program
+/// or link until restart. So the old version copies its own exe to the download folder, starts that copy
+/// with <see cref="InstallToArg"/> and <see cref="InstallFromArg"/>, and exits. The copy waits for it to close,
+/// puts the downloaded exe in place of the old one and starts it. Because the installer is the old version's
+/// own code, this works with any new version, including ones that don't know about installing.
+/// </summary>
 public static class UpdateInstaller
 {
     public const string UpdatedFromArg = "--updated-from";
+    public const string InstallToArg = "--install-to";
+    public const string InstallFromArg = "--install-from";
+    public const string InstallerName = "PasteGuard-installer.exe";
 
     public static string DownloadFolder => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PasteGuard", "updates");
@@ -236,8 +249,87 @@ public static class UpdateInstaller
     }
 
     /// <summary>
-    /// Puts <paramref name="newExe"/> in place of <paramref name="currentExe"/>. Windows lets a running exe be
-    /// renamed, so the running one becomes "&lt;name&gt;.old" and is deleted by the new version after it starts.
+    /// Step 1, in the running old version: copy this exe next to the download and start the copy, which installs
+    /// <paramref name="downloadedExe"/> over <paramref name="currentExe"/> once this instance has exited.
+    /// Throws <see cref="UpdateException"/> if the copy can't be made; launch errors are passed through.
+    /// </summary>
+    public static void StartInstaller(string downloadedExe, string currentExe)
+    {
+        var installer = Path.Combine(Path.GetDirectoryName(downloadedExe)!, InstallerName);
+        try
+        {
+            File.Copy(currentExe, installer, overwrite: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new UpdateException($"Couldn't prepare the update in {Path.GetDirectoryName(installer)}.", ex);
+        }
+
+        var psi = new ProcessStartInfo(installer) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(installer)! };
+        psi.ArgumentList.Add(InstallToArg);
+        psi.ArgumentList.Add(currentExe);
+        psi.ArgumentList.Add(InstallFromArg);
+        psi.ArgumentList.Add(downloadedExe);
+        psi.ArgumentList.Add(UpdatedFromArg);
+        psi.ArgumentList.Add(AppInfo.VersionText);
+        Process.Start(psi);
+    }
+
+    /// <summary>
+    /// Step 2, in the installer copy (after the old version has exited): copy <paramref name="newExe"/> over
+    /// <paramref name="targetExe"/> and start it. Retries for a while because the old exe can stay locked for a
+    /// moment after it exits. If anything fails, the old exe is put back and started again.
+    /// Returns an error message, or null on success.
+    /// </summary>
+    public static string? Install(string newExe, string targetExe, string updatedFrom,
+        Action<string, string?>? launch = null, int attempts = 20, TimeSpan? delay = null)
+    {
+        launch ??= Launch;
+        if (!Path.IsPathFullyQualified(targetExe) || !targetExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(targetExe))
+            return $"The update was asked to replace a file that isn't a PasteGuard exe ({targetExe}).";
+        if (!newExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !File.Exists(newExe))
+            return $"The downloaded update is missing ({newExe}).";
+
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                Swap(targetExe, newExe);
+                break;
+            }
+            catch (UpdateException ex) when (attempt < attempts)
+            {
+                Log.Write("UPDATE", $"Replacing {targetExe} failed (attempt {attempt} of {attempts}): {ex.InnerException?.Message ?? ex.Message}");
+                Thread.Sleep(delay ?? TimeSpan.FromMilliseconds(500));
+            }
+            catch (UpdateException ex)
+            {
+                TryLaunch(launch, targetExe, null); // keep the user protected on the old version
+                return ex.Message;
+            }
+        }
+
+        try
+        {
+            launch(targetExe, updatedFrom);
+            return null;
+        }
+        catch (Exception ex) when (IsLaunchError(ex))
+        {
+            Revert(targetExe);
+            TryLaunch(launch, targetExe, null);
+            return $"The new version couldn't be started, so the previous version was put back.\n\nWindows said: {Describe(ex)}";
+        }
+    }
+
+    private static void TryLaunch(Action<string, string?> launch, string exe, string? updatedFrom)
+    {
+        try { launch(exe, updatedFrom); } catch (Exception ex) when (IsLaunchError(ex)) { }
+    }
+
+    /// <summary>
+    /// Puts <paramref name="newExe"/> in place of <paramref name="currentExe"/> (which must not be running),
+    /// keeping the original as "&lt;name&gt;.old" until the new version has started and cleans it up.
     /// On failure the original file is put back.
     /// </summary>
     public static void Swap(string currentExe, string newExe)
@@ -253,7 +345,7 @@ public static class UpdateInstaller
             UpdateChecker.TryDelete(staged);
             throw new UpdateException(
                 $"PasteGuard can't write to its folder ({Path.GetDirectoryName(currentExe)}). " +
-                $"The new version was saved to {newExe}. Exit PasteGuard and replace the file yourself.", ex);
+                $"The new version was saved to {newExe}. Replace PasteGuard.exe with it yourself.", ex);
         }
 
         UpdateChecker.TryDelete(old);
@@ -286,14 +378,24 @@ public static class UpdateInstaller
         if (File.Exists(old)) File.Move(old, currentExe, overwrite: true);
     }
 
-    /// <summary>Starts the freshly swapped-in exe; it waits for this instance to exit.</summary>
-    public static void Launch(string exe)
+    /// <summary>Starts <paramref name="exe"/>; with <paramref name="updatedFrom"/> it shows the "updated" message.</summary>
+    public static void Launch(string exe, string? updatedFrom)
     {
         var psi = new ProcessStartInfo(exe) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(exe)! };
-        psi.ArgumentList.Add(UpdatedFromArg);
-        psi.ArgumentList.Add(AppInfo.VersionText);
+        if (updatedFrom is not null)
+        {
+            psi.ArgumentList.Add(UpdatedFromArg);
+            psi.ArgumentList.Add(updatedFrom);
+        }
         Process.Start(psi);
     }
+
+    public static bool IsLaunchError(Exception ex) =>
+        ex is System.ComponentModel.Win32Exception or IOException or UnauthorizedAccessException;
+
+    /// <summary>Windows' own reason, e.g. "Access is denied. (error 5)".</summary>
+    public static string Describe(Exception ex) =>
+        ex is System.ComponentModel.Win32Exception w ? $"{w.Message.TrimEnd('.')}. (error {w.NativeErrorCode})" : ex.Message;
 
     /// <summary>
     /// Deletes leftovers from an earlier update: the old exe and, right after an update, the downloaded files.

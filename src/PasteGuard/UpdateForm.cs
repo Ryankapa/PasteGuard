@@ -163,15 +163,16 @@ internal sealed class UpdateForm : Form
 
             SetMessage($"Installing PasteGuard {update.VersionText}…", "The download matches its SHA-256 hash. PasteGuard will restart in a moment.");
             _close.Enabled = false;
-            UpdateInstaller.Swap(exe, downloaded);
             try
             {
-                UpdateInstaller.Launch(exe);
+                // A copy of this exe swaps in the new version once we've exited (see UpdateInstaller).
+                UpdateInstaller.StartInstaller(downloaded, exe);
             }
-            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (UpdateInstaller.IsLaunchError(ex))
             {
-                UpdateInstaller.Revert(exe);
-                throw new UpdateException("The new version couldn't be started, so the current version was kept.", ex);
+                throw new UpdateException(
+                    "The installer couldn't be started, so nothing was changed.\n\n" +
+                    $"Windows said: {UpdateInstaller.Describe(ex)}", ex);
             }
 
             Log.Write("UPDATE", $"Installed {update.VersionText} (from {AppInfo.VersionText}); restarting");
