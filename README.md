@@ -75,7 +75,7 @@ Jev returns a risk score from **0 to 100** for each copied command. Anything **a
 | **70** | **Recommended.** Good balance for most people. |
 | 85+ | Only blocks very obvious attacks. |
 
-**Why 70?** Jev's documentation suggests 0.7 as the starting point for a confident "yes" on a yes/no question, and the local pre-filter already throws away ordinary text. Run the calibration tool (below) to see how each threshold performs on the bundled set of 30 attack and 37 legitimate samples.
+**Why 70?** Jev's documentation suggests 0.7 as the starting point for a confident "yes" on a yes/no question, and the local pre-filter already throws away ordinary text. Run the calibration tool (below) to see how each threshold performs on the bundled set of 62 attack and 40 legitimate samples.
 
 ### Something you trust got blocked?
 
@@ -105,7 +105,7 @@ copy ─► is it command-like? ──no──► nothing happens (never leaves 
               stays removed + warning      put back on the clipboard
 ```
 
-1. **Local pre-filter.** A list of patterns runs offline: `powershell`, `mshta`, `iex`/`irm`/`iwr`, `cmd /c`, `curl … http`, encoded commands, `certutil`, `bitsadmin`, `rundll32`, `regsvr32`, `finger`, `conhost --headless`, caret/backtick obfuscation, and similar. Text that matches none of them is ignored. Content from password managers that mark their clipboard data as private is always ignored.
+1. **Local pre-filter.** A list of patterns runs offline: `powershell`, `mshta`, `iex`/`irm`/`iwr`, `cmd /c`, `curl … http`, encoded commands, `certutil`, `bitsadmin`, `rundll32`, `regsvr32`, `finger`, `conhost`, WebDAV shares, and similar. It also looks for the disguises attackers use: XOR/char-code payloads, `'{0}{1}'-f`, `gcm *x*` wildcards, `%ComSpec:~…%` slicing, `cmd /v:on` variables and fake "I am not a robot" comments. Before matching, it undoes caret/backtick escapes, string splitting (`'pow'+'ershell'`, `p""owershell`, `c"d"n`), fullwidth letters, invisible characters and Unicode dashes. Upper and lower case don't matter. Text that matches none of them is ignored. Content from password managers that mark their clipboard data as private is always ignored.
 2. **Hold.** Command-like text is taken off the clipboard right away, so it can't be pasted before the verdict arrives (usually well under a second).
 3. **Score.** The text is sent to Jev with one yes/no question: *is this a ClickFix-style malicious command?* Jev's probability (0–1) is shown as 0–100.
 4. **Decide.** Blocked commands are logged and you get a warning. Click the warning to review and release the command. Allowed text goes back exactly as it was copied.

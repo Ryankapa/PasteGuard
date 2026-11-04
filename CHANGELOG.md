@@ -7,6 +7,10 @@ The newest version's notes are shown in the app when someone checks for updates.
 
 ## [Unreleased]
 
+### Changed
+- PasteGuard now spots disguised ClickFix commands that used to slip past it: scrambled, encoded or split-up commands, hidden-window tricks and fake "I am not a robot" comments. It was tested against every command in the ClickFix Hunter feed (over 6,000 real attack pages) and sends all the Windows ones to Jev for a verdict.
+- Look-alike characters, invisible characters, odd quotes and backslashed links (`http:/\`) can no longer hide a command.
+
 ## [1.1.0] - 2026-11-04
 
 ### Added
